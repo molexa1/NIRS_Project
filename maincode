@@ -1,0 +1,69 @@
+import pandas as pd
+import os
+import glob
+import math
+import numpy as np
+from numpy import nan
+import datetime
+import time
+
+def file_iterate():
+    os.chdir('/Users/maddieolexa/Desktop/11_NIRS')
+    FileList = glob.glob('*.csv')
+    #print(FileList)
+
+    df1 = pd.read_excel('/Users/maddieolexa/Desktop/11_NIRS/NIRSCohort.xlsx', usecols=['Name of File', 'Time'])
+    #print (df1) #NIRS_Cohort.xlsx with only names of files and reperfusion times
+    df1dict = df1.set_index('Name of File').to_dict()['Time']
+    #print(df1dict) #attaching file name to reperfusion time
+
+    for key in df1dict:
+        filename = (str(key) + ".csv")
+        print(filename)
+        timepoint = df1dict[key] #reperfusion time = datetime.time
+        """For Channel 1 (Right)"""
+        df = pd.read_csv(filename, skiprows=1, usecols=['Time', 'Ch. 1 StO2', 'Ch. 2 StO2'])
+        dfdict = df.set_index('Time').to_dict()['Ch. 1 StO2'] #dictionary of time to Ch1 values
+        counterbefore = 0
+        counterafter = 0
+        avgbase = 0
+        avgpost = 0
+        for x in dfdict:
+            if x < str(timepoint):
+                if dfdict[x] > 0:
+                    counterbefore += 1
+                    avgbase += dfdict[x]
+            elif x > str(timepoint):
+                if dfdict[x] > 0:
+                    counterafter += 1
+                    avgpost += dfdict[x]
+
+        avgbefore = avgbase/counterbefore
+        avgafter = avgpost/counterafter
+
+        """ For Channel 2 (Left)"""
+        dfdict1 = df.set_index('Time').to_dict()['Ch. 2 StO2']  # dictionary of time to Ch1 values
+        counterbefore1 = 0
+        counterafter1 = 0
+        avgbase1 = 0
+        avgpost1 = 0
+        for x in dfdict1:
+            if x < str(timepoint):
+                if dfdict1[x] > 0:
+                    counterbefore1 += 1
+                    avgbase1 += dfdict1[x]
+            elif x > str(timepoint):
+                if dfdict1[x] > 0:
+                    counterafter1 += 1
+                    avgpost1 += dfdict1[x]
+
+        avgbefore1 = avgbase1 / counterbefore1
+        avgafter1 = avgpost1 / counterafter1
+
+        print(f" For file {key}, the average Ch1 before reperfusion is {avgbefore}")
+        print(f" For file {key}, the average Ch2 before reperfusion is {avgbefore1}")
+        print(f" For file {key}, the average Ch1 after reperfusion is {avgafter}")
+        print(f" For file {key}, the average Ch2 after reperfusion is {avgafter1}")
+
+if __name__ == '__main__':
+    file_iterate()
